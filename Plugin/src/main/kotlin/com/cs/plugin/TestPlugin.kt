@@ -16,19 +16,20 @@ class TestPlugin  : Plugin<Project> {
         )
         //读取配置文件
         project.extensions.create("TestPlugin", ConfigExtension::class.java)
-        project.extensions.create("TestPluginNew", ConfigExtensionNew::class.java)
+
+        project.logger.lifecycle("TestPlugin apply")
         //这里通过transformClassesWith替换了原registerTransform来注册字节码转换操作
         appExtension.onVariants { variant ->
             //传统方式，配置获取后直接使用单例存储，使用时读取
-            PluginHelper.extension = project.extensions.getByType(
+//            PluginHelper.extension = project.extensions.getByType(
+//                ConfigExtension::class.java
+//            )
+            val extensionNew = project.extensions.getByType(
                 ConfigExtension::class.java
             )
-            val extensionNew = project.extensions.getByType(
-                ConfigExtensionNew::class.java
-            )
             //可以通过variant来获取当前编译环境的一些信息，最重要的是可以 variant.name 来区分是debug模式还是release模式编译
-            variant.instrumentation.transformClassesWith(MethodTimeTransform::class.java, InstrumentationScope.ALL) {
-            }
+//            variant.instrumentation.transformClassesWith(MethodTimeTransform::class.java, InstrumentationScope.ALL) {
+//            }
             variant.instrumentation.transformClassesWith(TimeCostTransform::class.java, InstrumentationScope.ALL) {
                 //配置通过指定配置的类，携带到TimeCostTransform中
                 it.packageNames.set(extensionNew.includePackages.toList())

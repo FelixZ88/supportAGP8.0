@@ -1,6 +1,7 @@
 package com.cs.plugin.timecost
 
 import com.android.build.api.instrumentation.InstrumentationParameters
+import org.gradle.api.logging.Logger
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input

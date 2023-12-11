@@ -17,6 +17,7 @@ class TimeCostClassVisitor(nextVisitor: ClassVisitor,val config: TimeCostConfig)
         exceptions: Array<out String>?
     ): MethodVisitor {
         val methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions)
+        print("TimeCostClassVisitor $name")
         if (name == "<clinit>" || name == "<init>") {
             return methodVisitor
         }
@@ -29,8 +30,6 @@ class TimeCostClassVisitor(nextVisitor: ClassVisitor,val config: TimeCostConfig)
         }
         //从配置中读取tag
         val tag = config.logTag.get()
-        val pluginExecuteThreadName = Thread.currentThread().toString()
-        Thread.dumpStack()
         val newMethodVisitor =
             object : AdviceAdapter(Opcodes.ASM5, methodVisitor, access, name, descriptor) {
                 private var startTimeLocal = -1 // 保存 startTime 的局部变量索引
@@ -39,9 +38,25 @@ class TimeCostClassVisitor(nextVisitor: ClassVisitor,val config: TimeCostConfig)
                     super.visitInsn(opcode)
                 }
 
+                override fun visitMethodInsn(
+                    opcode: Int,
+                    owner: String?,
+                    name: String?,
+                    descriptor: String?,
+                    isInterface: Boolean
+                ) {
+                    print("visitMethodInsn $owner $name $descriptor")
+                    if (owner == "android.util.Log" && name == "i") {
+                        super.visitMethodInsn(opcode, owner, "d", descriptor, isInterface)
+                        return
+                    }
+                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface)
+                }
+
                 @Override
                 override fun onMethodEnter() {
                     super.onMethodEnter();
+                    print("onMethodEnter")
                     // 在onMethodEnter中插入代码 val startTime = System.currentTimeMillis()
                     mv.visitMethodInsn(
                         Opcodes.INVOKESTATIC,
@@ -56,13 +71,14 @@ class TimeCostClassVisitor(nextVisitor: ClassVisitor,val config: TimeCostConfig)
 
                 @Override
                 override fun onMethodExit(opcode: Int) {
+                    print("onMethodExit")
                     // 在onMethodExit中插入代码 Log.e("tag", "Method: $name, timecost: " + (System.currentTimeMillis() - startTime))
                     mv.visitTypeInsn(
                         Opcodes.NEW,
                         "java/lang/StringBuilder"
                     );
                     mv.visitInsn(Opcodes.DUP);
-                    mv.visitLdcInsn("PluginThread: $pluginExecuteThreadName Method: $name, timecost: ");
+                    mv.visitLdcInsn("PluginThread: Method: $name, timecost: ");
                     mv.visitMethodInsn(
                         Opcodes.INVOKESPECIAL,
                         "java/lang/StringBuilder",
