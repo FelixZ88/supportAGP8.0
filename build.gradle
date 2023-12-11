@@ -2,18 +2,20 @@
 
 //引入插件
 buildscript {
+    ext.kotlin_version = '1.9.10'
     repositories {
         maven {
             url '\\localmaven'
         }
     }
     dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.cs.testplugin:Plugin:0.0.1'
     }
 }
 plugins {
-    id 'com.android.application' version '7.4.2' apply false
-    id 'com.android.library' version '7.4.2' apply false
+    id 'com.android.application' version '8.0.2' apply false
+    id 'com.android.library' version '8.0.2' apply false
     id 'org.jetbrains.kotlin.android' version '1.6.21' apply false
 }
 task clean(type: Delete) {
